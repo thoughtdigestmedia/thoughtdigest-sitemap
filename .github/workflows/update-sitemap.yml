@@ -2,8 +2,8 @@ name: Update News Sitemap
 
 on:
   schedule:
-   - cron: '*/10 * * * *'  # Runs every 10 minutes
-  workflow_dispatch:      # Manual trigger in UI
+    - cron: '*/10 * * * *'  # Every 10 minutes
+  workflow_dispatch:        # Manual trigger in UI
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          persist-credentials: false  # We'll provide token explicitly
+          persist-credentials: true  # Keep token for git push
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -23,17 +23,12 @@ jobs:
       - name: Run sitemap generator
         run: python generate_sitemap.py
 
-      - name: Commit updated sitemap if changed
+      - name: Commit updated sitemap (always commit)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add news-sitemap.xml
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Update news-sitemap.xml"
-            git push
-          fi
+          git commit -m "Update news-sitemap.xml" || echo "No changes to commit"
+          git push origin HEAD:main
         env:
-          # Use GitHub token for authentication to push changes
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
