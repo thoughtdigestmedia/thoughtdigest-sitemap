@@ -3,7 +3,7 @@ name: Update News Sitemap
 on:
   schedule:
     - cron: '*/10 * * * *'  # Every 10 minutes
-  workflow_dispatch:        # Manual trigger in UI
+  workflow_dispatch:        # Manual trigger from UI
 
 jobs:
   build:
@@ -13,12 +13,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          persist-credentials: true  # Keep token for git push
+          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install feedparser
 
       - name: Run sitemap generator
         run: python generate_sitemap.py
