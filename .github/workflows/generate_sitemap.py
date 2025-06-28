@@ -2,7 +2,7 @@ import feedparser
 from datetime import datetime
 from xml.sax.saxutils import escape
 
-RSS_FEED_URL = "https://www.thoughtdigestmedia.com.au/blog-feed.xml"
+RSS_FEED_URL = "https://www.thoughtdigestmedia.com.au/news-feed.xml"
 SITE_NAME = "Thought Digest Media"
 LANGUAGE = "en-AU"
 
