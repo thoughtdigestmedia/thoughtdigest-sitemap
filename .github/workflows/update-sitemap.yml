@@ -2,7 +2,7 @@ name: Update News Sitemap
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
+   - cron: '*/10 * * * *'  # Runs every 10 minutes
   workflow_dispatch:      # Manual trigger in UI
 
 jobs:
