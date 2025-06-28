@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
 
 # CONFIG
-RSS_FEED_URL = "https://www.thoughtdigestmedia.com.au/news-feed.xml"
+RSS_FEED_URL = "https://www.thoughtdigestmedia.com.au/blog-feed.xml"
 SITE_NAME = "Thought Digest Media"
 LANGUAGE = "en-AU"
 OUTPUT_FILE = "news-sitemap.xml"
