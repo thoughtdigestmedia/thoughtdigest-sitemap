@@ -2,36 +2,31 @@ name: Update News Sitemap
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # Every 10 minutes
-  workflow_dispatch:        # Manual trigger from UI
+    - cron: '*/15 * * * *'  # every 15 minutes
+  workflow_dispatch:        # manual trigger
 
 jobs:
-  build:
+  update-sitemap:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: true
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: 3.11
 
-      - name: Install dependencies
+      - name: Install feedparser
         run: pip install feedparser
 
-      - name: Run sitemap generator
-        run: python generate_sitemap.py
+      - name: Run Sitemap Script
+        run: python update_sitemap.py
 
-      - name: Commit updated sitemap (always commit)
+      - name: Commit Changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
           git add news-sitemap.xml
-          git commit -m "Update news-sitemap.xml" || echo "No changes to commit"
-          git push origin HEAD:main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git commit -m "🔄 Auto-update news-sitemap.xml" || echo "No changes to commit"
+          git push
