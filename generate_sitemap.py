@@ -1,63 +1,47 @@
 import feedparser
-from datetime import datetime, timedelta
-from xml.sax.saxutils import escape
+import xml.etree.ElementTree as ET
+from datetime import datetime
+from pathlib import Path
 
-# CONFIG
-RSS_FEED_URL = "https://www.thoughtdigestmedia.com.au/blog-feed.xml"
-SITE_NAME = "Thought Digest Media"
-LANGUAGE = "en-AU"
-OUTPUT_FILE = "news-sitemap.xml"
-MAX_ARTICLES = 100  # Keep it under 1000 for Google News
-DAYS_LIMIT = 2      # Google News requires 48-hour recency
+RSS_FEED = "https://www.thoughtdigestmedia.com.au/blog-feed.xml"
+SITEMAP_PATH = Path("news-sitemap.xml")
+MAX_ITEMS = 10
 
-# FETCH ARTICLES (only last 48 hours)
-def fetch_articles():
-    feed = feedparser.parse(RSS_FEED_URL)
-    recent_cutoff = datetime.utcnow() - timedelta(days=DAYS_LIMIT)
-    fresh_entries = [
-        entry for entry in feed.entries
-        if hasattr(entry, 'published_parsed') and
-        datetime(*entry.published_parsed[:6]) > recent_cutoff
-    ]
-    return fresh_entries[:MAX_ARTICLES]
+def fetch_latest_rss_items():
+    feed = feedparser.parse(RSS_FEED)
+    items = []
+    for entry in feed.entries:
+        pub_date = datetime(*entry.published_parsed[:6])
+        items.append({
+            'title': entry.title,
+            'link': entry.link,
+            'pub_date': pub_date,
+        })
+    items.sort(key=lambda x: x['pub_date'], reverse=True)
+    return items[:MAX_ITEMS]
 
-# FORMAT SINGLE ENTRY
-def format_article(entry):
-    title = escape(entry.title)
-    link = escape(entry.link)
-    pub_date = datetime(*entry.published_parsed[:6]).isoformat() + "+00:00"
+def generate_sitemap(items):
+    NSMAP = {
+        'xmlns': 'http://www.sitemaps.org/schemas/sitemap/0.9',
+        'xmlns:news': 'http://www.google.com/schemas/sitemap-news/0.9',
+    }
+    urlset = ET.Element("urlset", NSMAP)
 
-    # Optional fallbacks
-    author = escape(entry.get("author", "Thought Digest Media"))
-    category = escape(entry.get("tags", [{}])[0].get("term", "News")) if entry.get("tags") else "News"
+    for item in items:
+        url = ET.SubElement(urlset, "url")
+        ET.SubElement(url, "loc").text = item['link']
 
-    return f"""
-  <url>
-    <loc>{link}</loc>
-    <news:news>
-      <news:publication>
-        <news:name>{SITE_NAME}</news:name>
-        <news:language>{LANGUAGE}</news:language>
-      </news:publication>
-      <news:publication_date>{pub_date}</news:publication_date>
-      <news:title>{title}</news:title>
-    </news:news>
-  </url>"""
+        news = ET.SubElement(url, "news:news")
+        pub = ET.SubElement(news, "news:publication")
+        ET.SubElement(pub, "news:name").text = "Thought Digest"
+        ET.SubElement(pub, "news:language").text = "en"
 
-# GENERATE FULL SITEMAP
-def generate_sitemap():
-    articles = fetch_articles()
-    items = "\n".join(format_article(entry) for entry in articles)
+        ET.SubElement(news, "news:publication_date").text = item['pub_date'].isoformat()
+        ET.SubElement(news, "news:title").text = item['title']
 
-    sitemap = f"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-{items}
-</urlset>
-"""
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write(sitemap)
-    print(f"Generated {OUTPUT_FILE} with {len(articles)} articles.")
+    tree = ET.ElementTree(urlset)
+    ET.indent(tree, space="  ", level=0)
+    tree.write(SITEMAP_PATH, encoding="utf-8", xml_declaration=True)
 
 if __name__ == "__main__":
-    generate_sitemap()
+    generate_sitemap(fetch_latest_rss_items())
