@@ -3,11 +3,16 @@ name: Update News Sitemap
 on:
   schedule:
     - cron: '*/15 * * * *'  # every 15 minutes
-  workflow_dispatch:        # manual trigger
+  workflow_dispatch:        # allow manual trigger
+
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: true
 
 jobs:
   update-sitemap:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
